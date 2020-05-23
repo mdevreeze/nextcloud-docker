@@ -6,9 +6,10 @@ volumes:
 
 services:
   s3ql:
-    image: docker-s3ql
-    volumes:
-      - /opt/s3ql:/s3ql:shared
+    build:
+      context: ./docker-s3ql
+      args:
+        S3QL_VERSION: 3.4.1
     security_opt:
       - apparmor:unconfined 
     cap_add:
@@ -37,5 +38,4 @@ services:
       - db
     volumes:
       - nextcloud:/var/www/html
-      - /opt/s3ql:/data:slave
     restart: always

@@ -1,3 +1,2 @@
 docker-compose.override.yml
 create-s3qlfs.sh
-authinfo2

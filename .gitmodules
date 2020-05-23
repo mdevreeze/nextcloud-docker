@@ -1,0 +1,3 @@
+[submodule "docker-s3ql"]
+	path = docker-s3ql
+	url = git@github.com:mdevreeze/docker-s3ql.git

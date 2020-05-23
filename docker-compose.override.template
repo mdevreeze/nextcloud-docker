@@ -1,0 +1,21 @@
+version: '2'
+
+services: 
+  s3ql:
+    volumes:
+      - /sq3ql/host/dir/here:/s3ql:shared
+    environment:
+      - S3QL_PASSWORD=
+      - S3QL_USERNAME=
+      - S3QL_URL=
+      - FS_PASSPHRASE=
+      - S3QL_MOUNT_OPTIONS=--allow-other
+
+  db:
+    volumes: 
+      - /sq3ql/host/dir/here:/data:slave
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=
+      - MYSQL_USER=
