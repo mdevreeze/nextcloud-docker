@@ -1,0 +1,41 @@
+version: '2'
+
+volumes:
+  nextcloud:
+  db:
+
+services:
+  s3ql:
+    image: docker-s3ql
+    volumes:
+      - /opt/s3ql:/s3ql:shared
+    security_opt:
+      - apparmor:unconfined 
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    stop_grace_period: 10m
+
+  db:
+    image: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+
+  app:
+    build: ./nextcloud
+    environment: 
+      - NEXTCLOUD_DATA_DIR=/data
+    depends_on: 
+      - db
+      - s3ql
+    ports:
+      - 80:80
+    links:
+      - db
+    volumes:
+      - nextcloud:/var/www/html
+      - /opt/s3ql:/data:slave
+    restart: always
