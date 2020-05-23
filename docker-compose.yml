@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 volumes:
   nextcloud:
@@ -32,8 +32,6 @@ services:
     depends_on: 
       - db
       - s3ql
-    ports:
-      - 80:80
     links:
       - db
     volumes:

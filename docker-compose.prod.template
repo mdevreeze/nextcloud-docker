@@ -1,0 +1,71 @@
+# extra config for Lets encrypt encryption
+
+version: '3'
+
+volumes:
+  db:
+  nextcloud:
+  certs:
+  vhost.d:
+  html:
+
+networks:
+  proxy-tier:
+
+services:
+  s3ql:
+    volumes:
+      - /sq3ql/host/dir/here:/s3ql:shared
+    environment:
+      - S3QL_PASSWORD=
+      - S3QL_USERNAME=
+      - S3QL_URL=
+      - FS_PASSPHRASE=
+      - S3QL_MOUNT_OPTIONS=--allow-other
+
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=
+      - MYSQL_USER=
+
+  app:
+    volumes: 
+      - /sq3ql/host/dir/here:/data:slave
+    environment: 
+      - VIRTUAL_HOST=
+      - LETSENCRYPT_HOST=
+      - LETSENCRYPT_EMAIL=
+    networks:
+      - proxy-tier
+      - default
+
+  proxy:
+    build: ./proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy-tier
+
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy-tier
+    depends_on:
+      - proxy
