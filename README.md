@@ -1,5 +1,18 @@
 # Nextcloud 18 docker setup with S3QL for scalable external storage
 
+## Requires
+* Ansible
+* S3QL (for mkfs.s3ql)
+* Ubuntu 20.04 host (other Debian based might also work?)
+
+## Installs
+* Docker
+* MariaDB (containerized)
+* Nextcloud 18 on Apache-Php (containerized)
+* S3QL
+* Lets encrypt SSL certificate with auto renew (containerized)
+* Nginx reverse proxy (containerized)
+
 ## Setup
 
 1. Create an Ansible vault based on `nextcloud-secrets.template.yml`.
