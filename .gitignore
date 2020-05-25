@@ -1,2 +1,1 @@
-docker-compose.*.yml
-create-s3qlfs.sh
+docker-compose.override.yml

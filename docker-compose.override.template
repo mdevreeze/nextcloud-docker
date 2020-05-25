@@ -1,21 +1,10 @@
 version: '3'
 
 services: 
-  s3ql:
-    volumes:
-      - /sq3ql/host/dir/here:/s3ql:shared
-    environment:
-      - S3QL_PASSWORD=
-      - S3QL_USERNAME=
-      - S3QL_URL=
-      - FS_PASSPHRASE=
-      - S3QL_MOUNT_OPTIONS=--allow-other
 
   app:
     ports:
       - 80:80
-    volumes: 
-      - /sq3ql/host/dir/here:/data:slave
 
   db:
     environment:

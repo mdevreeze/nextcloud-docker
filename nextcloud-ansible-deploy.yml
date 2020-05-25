@@ -1,0 +1,104 @@
+# Before running this you need to create a S3QL fs on S3QL_URL with mkfs.s3ql
+# Tested on Ubuntu 20.04 LTS, run as root
+# BEWARE script will reboot machine!
+- hosts: nextcloud
+  vars_files:
+    - nextcloud-secrets.yml
+  vars:
+    S3QL_DIR: "/root/.s3ql"
+    S3QL_AUTHINFO_FILENAME: "authinfo2"
+  environment:
+    VIRTUAL_HOST: "virtual host here"
+    LETSENCRYPT_EMAIL:  "email here"
+    MYSQL_PASSWORD: "{{ MYSQL_PASSWORD_SECRET }}"
+  tasks:
+    - name: Upgrade dist packages
+      apt:
+          upgrade: dist
+          update_cache: yes
+      register: upgrade
+    - name: Reboot system
+      reboot:
+      when: upgrade.changed
+    - name: Install docker-compose
+      apt:
+          name: docker-compose
+          state: latest
+          update_cache: yes
+      register: docker
+    - name: Install git
+      apt:
+        name: git
+    - name: Reboot system
+      reboot:
+      when: usermod.changed
+    - name: Install s3ql
+      apt:
+        name: s3ql
+    - name: Create s3ql config dir
+      file:
+        path: "{{ S3QL_DIR }}"
+        state: directory
+        mode: '0755'
+    - name: Create mount dir
+      file:
+        path: "/s3ql"
+        state: directory
+        owner: www-data
+        mode: '0755'
+    - name: Copy AuthInfo2 generation script
+      template:
+        src: authinfo2.j2
+        dest: "{{ S3QL_DIR }}/{{ S3QL_AUTHINFO_FILENAME }}"
+        mode: 0700
+        owner: root
+        group: root
+    - name: list contents of S3QL directory
+      command: ls /s3ql
+      register: contents
+    - name: Mount S3QL
+      shell: mount.s3ql {{ S3QL_URL_SECRET }} /s3ql --allow-other
+      when: contents.stdout == ""
+    - name: Copy deploy key
+      copy:
+        content: "{{ PRIVATE_KEY_SECRET }}"
+        dest: /root/deploy_key
+        mode: 0600
+        owner: root
+        group: root
+    - name: Ensure /app/nextcloud exists
+      file:
+        path: /app/nextcloud
+        state: directory
+        mode: 755
+    - name: Clone git repo
+      git:
+        repo: "git@github.com:mdevreeze/nextcloud-docker.git"
+        dest: /app/nextcloud
+        accept_hostkey: yes
+        key_file: /root/deploy_key
+    - name: Copy docker-compose.prod.yml
+      copy:
+        src: /home/Projects/nextcloud/docker-compose.prod.yml # change this to location of the docker-compose prod file
+        dest: /app/nextcloud/docker-compose.prod.yml
+        owner: root
+        group: root
+        mode: 0644
+    - name: Docker compose up
+      docker_compose:
+        project_src: /app/nextcloud
+        files: 
+          - docker-compose.yml
+          - docker-compose.prod.yml
+    - name: Systemd service
+      copy:
+          src: nextcloud.service
+          dest: /etc/systemd/system/nextcloud.service
+          mode: 755
+          owner: root
+          group: root
+    - name: Enable systemd service
+      systemd:
+        name: nextcloud
+        enabled: yes
+        daemon_reload: yes

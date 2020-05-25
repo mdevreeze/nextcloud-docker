@@ -5,19 +5,6 @@ volumes:
   db:
 
 services:
-  s3ql:
-    build:
-      context: ./docker-s3ql
-      args:
-        S3QL_VERSION: 3.4.1
-    security_opt:
-      - apparmor:unconfined 
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    stop_grace_period: 10m
-
   db:
     image: mariadb
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
@@ -27,11 +14,8 @@ services:
 
   app:
     build: ./nextcloud
-    environment: 
-      - NEXTCLOUD_DATA_DIR=/data
     depends_on: 
       - db
-      - s3ql
     links:
       - db
     volumes:
